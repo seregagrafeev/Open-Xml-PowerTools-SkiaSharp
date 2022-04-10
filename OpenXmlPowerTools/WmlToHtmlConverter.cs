@@ -10,6 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Xml.Linq;
 using DocumentFormat.OpenXml.Packaging;
+using SkiaSharp;
 
 // 200e lrm - LTR
 // 200f rlm - RTL
@@ -120,7 +121,7 @@ namespace OpenXmlPowerTools
     [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public class ImageInfo
     {
-        public Bitmap Bitmap;
+        public SKBitmap Bitmap;
         public XAttribute ImgStyleAttribute;
         public string ContentType;
         public XElement DrawingElement;
@@ -2247,10 +2248,7 @@ namespace OpenXmlPowerTools
             {
                 if (_knownFamilies == null)
                 {
-                    _knownFamilies = new HashSet<string>();
-                    var families = FontFamily.Families;
-                    foreach (var fam in families)
-                        _knownFamilies.Add(fam.Name);
+                    _knownFamilies = new HashSet<string>(SKFontManager.Default.FontFamilies);
                 }
                 return _knownFamilies;
             }
@@ -2276,10 +2274,10 @@ namespace OpenXmlPowerTools
                 return 0;
 
             // in theory, all unknown fonts are found by the above test, but if not...
-            FontFamily ff;
+            SKTypeface ff;
             try
             {
-                ff = new FontFamily(fontName);
+                ff = SKTypeface.FromFamilyName(fontName);
             }
             catch (ArgumentException)
             {
@@ -2288,11 +2286,11 @@ namespace OpenXmlPowerTools
                 return 0;
             }
 
-            var fs = FontStyle.Regular;
+            var fs = SKFontStyle.Normal;
             if (GetBoolProp(rPr, W.b) || GetBoolProp(rPr, W.bCs))
-                fs |= FontStyle.Bold;
+                fs = SKFontStyle.Bold;
             if (GetBoolProp(rPr, W.i) || GetBoolProp(rPr, W.iCs))
-                fs |= FontStyle.Italic;
+                fs = SKFontStyle.Italic;
 
             // Appended blank as a quick fix to accommodate &nbsp; that will get
             // appended to some layout-critical runs such as list item numbers.
@@ -3078,8 +3076,8 @@ namespace OpenXmlPowerTools
             if (!ImageContentTypes.Contains(contentType))
                 return null;
 
-            using (var partStream = imagePart.GetStream())
-            using (var bitmap = new Bitmap(partStream))
+            using (var partStream = imagePart.GetStream(System.IO.FileMode.OpenOrCreate, System.IO.FileAccess.ReadWrite))
+            using (var bitmap = SKBitmap.Decode(partStream))
             {
                 if (extentCx != null && extentCy != null)
                 {
@@ -3145,7 +3143,7 @@ namespace OpenXmlPowerTools
                 {
                     try
                     {
-                        using (var bitmap = new Bitmap(partStream))
+                        using (var bitmap = SKBitmap.Decode(partStream))
                         {
                             var imageInfo = new ImageInfo()
                             {

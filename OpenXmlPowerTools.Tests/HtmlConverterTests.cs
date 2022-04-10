@@ -8,7 +8,6 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -16,6 +15,7 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using DocumentFormat.OpenXml.Packaging;
 using OpenXmlPowerTools;
+using SkiaSharp;
 using Xunit;
 
 #if DO_CONVERSION_VIA_WORD
@@ -205,29 +205,23 @@ namespace OxPt
                                 localDirInfo.Create();
                             ++imageCounter;
                             string extension = imageInfo.ContentType.Split('/')[1].ToLower();
-                            ImageFormat imageFormat = null;
-                            if (extension == "png")
+                            SKEncodedImageFormat? imageFormat = null;
+
+                            switch (extension)
                             {
-                                // Convert png to jpeg.
-                                extension = "gif";
-                                imageFormat = ImageFormat.Gif;
-                            }
-                            else if (extension == "gif")
-                                imageFormat = ImageFormat.Gif;
-                            else if (extension == "bmp")
-                                imageFormat = ImageFormat.Bmp;
-                            else if (extension == "jpeg")
-                                imageFormat = ImageFormat.Jpeg;
-                            else if (extension == "tiff")
-                            {
-                                // Convert tiff to gif.
-                                extension = "gif";
-                                imageFormat = ImageFormat.Gif;
-                            }
-                            else if (extension == "x-wmf")
-                            {
-                                extension = "wmf";
-                                imageFormat = ImageFormat.Wmf;
+                                case "jpg":
+                                case "jpeg":
+                                    imageFormat = SKEncodedImageFormat.Jpeg;
+                                    break;
+                                case "webp":
+                                    imageFormat = SKEncodedImageFormat.Webp;
+                                    break;
+                                case "png":
+                                case "gif":
+                                case "bmp":
+                                case "wbmp":
+                                    imageFormat = SKEncodedImageFormat.Png;
+                                    break;
                             }
 
                             // If the image format isn't one that we expect, ignore it,
@@ -239,7 +233,11 @@ namespace OxPt
                                 imageCounter.ToString() + "." + extension;
                             try
                             {
-                                imageInfo.Bitmap.Save(imageFileName, imageFormat);
+                                using (Stream s = new FileStream(imageFileName, FileMode.OpenOrCreate, FileAccess.ReadWrite))
+                                {
+                                    SKData d = SKImage.FromBitmap(imageInfo.Bitmap).Encode(imageFormat.Value, 100);
+                                    d.SaveTo(s);
+                                }
                             }
                             catch (System.Runtime.InteropServices.ExternalException)
                             {
@@ -298,29 +296,23 @@ namespace OxPt
                                 localDirInfo.Create();
                             ++imageCounter;
                             string extension = imageInfo.ContentType.Split('/')[1].ToLower();
-                            ImageFormat imageFormat = null;
-                            if (extension == "png")
+                            SKEncodedImageFormat? imageFormat = null;
+
+                            switch (extension)
                             {
-                                // Convert png to jpeg.
-                                extension = "gif";
-                                imageFormat = ImageFormat.Gif;
-                            }
-                            else if (extension == "gif")
-                                imageFormat = ImageFormat.Gif;
-                            else if (extension == "bmp")
-                                imageFormat = ImageFormat.Bmp;
-                            else if (extension == "jpeg")
-                                imageFormat = ImageFormat.Jpeg;
-                            else if (extension == "tiff")
-                            {
-                                // Convert tiff to gif.
-                                extension = "gif";
-                                imageFormat = ImageFormat.Gif;
-                            }
-                            else if (extension == "x-wmf")
-                            {
-                                extension = "wmf";
-                                imageFormat = ImageFormat.Wmf;
+                                case "jpg":
+                                case "jpeg":
+                                    imageFormat = SKEncodedImageFormat.Jpeg;
+                                    break;
+                                case "webp":
+                                    imageFormat = SKEncodedImageFormat.Webp;
+                                    break;
+                                case "png":
+                                case "gif":
+                                case "bmp":
+                                case "wbmp":
+                                    imageFormat = SKEncodedImageFormat.Png;
+                                    break;
                             }
 
                             // If the image format isn't one that we expect, ignore it,
@@ -332,7 +324,11 @@ namespace OxPt
                                 imageCounter.ToString() + "." + extension;
                             try
                             {
-                                imageInfo.Bitmap.Save(imageFileName, imageFormat);
+                                using (Stream s = new FileStream(imageFileName, FileMode.OpenOrCreate, FileAccess.ReadWrite))
+                                {
+                                    SKData d = SKImage.FromBitmap(imageInfo.Bitmap).Encode(imageFormat.Value, 100);
+                                    d.SaveTo(s);
+                                }
                             }
                             catch (System.Runtime.InteropServices.ExternalException)
                             {

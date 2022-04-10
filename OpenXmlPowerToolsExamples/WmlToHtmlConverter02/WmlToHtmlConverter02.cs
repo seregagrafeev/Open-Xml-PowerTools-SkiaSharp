@@ -22,6 +22,7 @@ using System.Xml.Linq;
 using DocumentFormat.OpenXml.Packaging;
 using OpenXmlPowerTools;
 using System.Collections.Generic;
+using SkiaSharp;
 
 class WmlToHtmlConverterHelper
 {
@@ -84,25 +85,26 @@ class WmlToHtmlConverterHelper
                     {
                         ++imageCounter;
                         string extension = imageInfo.ContentType.Split('/')[1].ToLower();
-                        ImageFormat imageFormat = null;
-                        if (extension == "png")
-                            imageFormat = ImageFormat.Png;
-                        else if (extension == "gif")
-                            imageFormat = ImageFormat.Gif;
-                        else if (extension == "bmp")
-                            imageFormat = ImageFormat.Bmp;
-                        else if (extension == "jpeg")
-                            imageFormat = ImageFormat.Jpeg;
-                        else if (extension == "tiff")
+                        SKEncodedImageFormat? imageFormat = null;
+                        string mimeType = null;
+                        switch (extension)
                         {
-                            // Convert tiff to gif.
-                            extension = "gif";
-                            imageFormat = ImageFormat.Gif;
-                        }
-                        else if (extension == "x-wmf")
-                        {
-                            extension = "wmf";
-                            imageFormat = ImageFormat.Wmf;
+                            case "jpg":
+                            case "jpeg":
+                                imageFormat = SKEncodedImageFormat.Jpeg;
+                                mimeType = "image/jpeg";
+                                break;
+                            case "webp":
+                                imageFormat = SKEncodedImageFormat.Webp;
+                                mimeType = "image/webp";
+                                break;
+                            case "png":
+                            case "gif":
+                            case "bmp":
+                            case "wbmp":
+                                imageFormat = SKEncodedImageFormat.Png;
+                                mimeType = "image/png";
+                                break;
                         }
 
                         // If the image format isn't one that we expect, ignore it,
@@ -113,21 +115,12 @@ class WmlToHtmlConverterHelper
                         string base64 = null;
                         try
                         {
-                            using (MemoryStream ms = new MemoryStream())
-                            {
-                                imageInfo.Bitmap.Save(ms, imageFormat);
-                                var ba = ms.ToArray();
-                                base64 = System.Convert.ToBase64String(ba);
-                            }
+                            base64 = System.Convert.ToBase64String(imageInfo.Bitmap.Encode(imageFormat.Value, 100).ToArray());
                         }
                         catch (System.Runtime.InteropServices.ExternalException)
                         {
                             return null;
                         }
-
-                        ImageFormat format = imageInfo.Bitmap.RawFormat;
-                        ImageCodecInfo codec = ImageCodecInfo.GetImageDecoders().First(c => c.FormatID == format.Guid);
-                        string mimeType = codec.MimeType;
 
                         string imageSource = string.Format("data:{0};base64,{1}", mimeType, base64);
 

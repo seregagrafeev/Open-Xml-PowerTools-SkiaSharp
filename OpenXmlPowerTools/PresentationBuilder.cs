@@ -1350,7 +1350,15 @@ namespace OpenXmlPowerTools
                 var ct = oldPart.ContentType;
                 var ext = Path.GetExtension(oldPart.Uri.OriginalString);
                 MediaDataPart newPart = newContentPart.OpenXmlPackage.CreateMediaDataPart(ct, ext);
-                newPart.FeedData(oldPart.GetStream());
+
+                using (var stream = oldPart.GetStream(FileMode.Open, FileAccess.Read))
+                {
+                    newPart.FeedData(stream);
+                }
+
+                //newPart.FeedData(oldPart.GetStream());
+
+                //newPart.FeedData(oldPart.GetStream());
                 string id = null;
                 string relationshipType = null;
 

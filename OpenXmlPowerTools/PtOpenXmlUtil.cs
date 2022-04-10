@@ -12,9 +12,7 @@ using System.Linq;
 using System.Xml.Linq;
 using System.Collections.Generic;
 using DocumentFormat.OpenXml.Packaging;
-using System.Drawing;
-using Font = System.Drawing.Font;
-using FontFamily = System.Drawing.FontFamily;
+using SkiaSharp;
 
 // ReSharper disable InconsistentNaming
 
@@ -636,10 +634,7 @@ namespace OpenXmlPowerTools
         {
             if (KnownFamilies == null)
             {
-                KnownFamilies = new HashSet<string>();
-                var families = FontFamily.Families;
-                foreach (var fam in families)
-                    KnownFamilies.Add(fam.Name);
+                KnownFamilies = new HashSet<string>(SKFontManager.Default.FontFamilies);
             }
 
             var fontName = (string)r.Attribute(PtOpenXml.pt + "FontName");
@@ -668,10 +663,10 @@ namespace OpenXmlPowerTools
             if (!KnownFamilies.Contains(fontName))
                 return 0;
             // in theory, all unknown fonts are found by the above test, but if not...
-            FontFamily ff;
+            SKTypeface ff;
             try
             {
-                ff = new FontFamily(fontName);
+                ff = SKTypeface.FromFamilyName(fontName);
             }
             catch (ArgumentException)
             {
@@ -679,15 +674,15 @@ namespace OpenXmlPowerTools
 
                 return 0;
             }
-            FontStyle fs = FontStyle.Regular;
+            SKFontStyle fs = SKFontStyle.Normal;
             var bold = GetBoolProp(rPr, W.b) || GetBoolProp(rPr, W.bCs);
             var italic = GetBoolProp(rPr, W.i) || GetBoolProp(rPr, W.iCs);
             if (bold && !italic)
-                fs = FontStyle.Bold;
+                fs = SKFontStyle.Bold;
             if (italic && !bold)
-                fs = FontStyle.Italic;
+                fs = SKFontStyle.Italic;
             if (bold && italic)
-                fs = FontStyle.Bold | FontStyle.Italic;
+                fs = SKFontStyle.BoldItalic;
 
             var runText = r.DescendantsTrimmed(W.txbxContent)
                 .Where(e => e.Name == W.t)

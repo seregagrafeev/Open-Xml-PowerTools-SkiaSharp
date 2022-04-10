@@ -13,6 +13,7 @@ using System.Xml.Linq;
 using DocumentFormat.OpenXml.Packaging;
 using OpenXmlPowerTools;
 using OpenXmlPowerTools.HtmlToWml;
+using SkiaSharp;
 
 namespace OpenXmlPowerTools
 {
@@ -137,25 +138,23 @@ namespace OpenXmlPowerTools
                                 localDirInfo.Create();
                             ++imageCounter;
                             string extension = imageInfo.ContentType.Split('/')[1].ToLower();
-                            ImageFormat imageFormat = null;
-                            if (extension == "png")
-                                imageFormat = ImageFormat.Png;
-                            else if (extension == "gif")
-                                imageFormat = ImageFormat.Gif;
-                            else if (extension == "bmp")
-                                imageFormat = ImageFormat.Bmp;
-                            else if (extension == "jpeg")
-                                imageFormat = ImageFormat.Jpeg;
-                            else if (extension == "tiff")
+                            SKEncodedImageFormat? imageFormat = null;
+
+                            switch (extension)
                             {
-                                // Convert tiff to gif.
-                                extension = "gif";
-                                imageFormat = ImageFormat.Gif;
-                            }
-                            else if (extension == "x-wmf")
-                            {
-                                extension = "wmf";
-                                imageFormat = ImageFormat.Wmf;
+                                case "jpg":
+                                case "jpeg":
+                                    imageFormat = SKEncodedImageFormat.Jpeg;
+                                    break;
+                                case "webp":
+                                    imageFormat = SKEncodedImageFormat.Webp;
+                                    break;
+                                case "png":
+                                case "gif":
+                                case "bmp":
+                                case "wbmp":
+                                    imageFormat = SKEncodedImageFormat.Png;
+                                    break;
                             }
 
                             // If the image format isn't one that we expect, ignore it,
@@ -167,7 +166,11 @@ namespace OpenXmlPowerTools
                                 imageCounter.ToString() + "." + extension;
                             try
                             {
-                                imageInfo.Bitmap.Save(imageFileName, imageFormat);
+                                using (Stream s = new FileStream(imageFileName, FileMode.OpenOrCreate, FileAccess.ReadWrite))
+                                {
+                                    SKData d = SKImage.FromBitmap(imageInfo.Bitmap).Encode(imageFormat.Value, 100);
+                                    d.SaveTo(s);
+                                }
                             }
                             catch (System.Runtime.InteropServices.ExternalException)
                             {

@@ -11,6 +11,7 @@ using System.Text;
 using System.Xml.Linq;
 using DocumentFormat.OpenXml.Packaging;
 using System.IO;
+using SkiaSharp;
 
 namespace OpenXmlPowerTools
 {
@@ -235,10 +236,7 @@ namespace OpenXmlPowerTools
             {
                 if (_knownFamilies == null)
                 {
-                    _knownFamilies = new HashSet<string>();
-                    var families = FontFamily.Families;
-                    foreach (var fam in families)
-                        _knownFamilies.Add(fam.Name);
+                    _knownFamilies = new HashSet<string>(SKFontManager.Default.FontFamilies);
                 }
                 return _knownFamilies;
             }
