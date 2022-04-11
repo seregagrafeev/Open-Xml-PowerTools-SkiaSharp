@@ -1,6 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <PackageId>$(AssemblyName).NetStandard.SkiaSharp</PackageId>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <Version>4.6.0</Version>
+    <Authors>Microsoft,EricWhite,Xamarin</Authors>
+    <PackageTags>OpenXmlPowerTools;NET Standard;OpenXML;Power Tools;DOCX;Word;XLSX;Excel;PPTX;Powerpoint;</PackageTags>
+    <PackageReleaseNotes>Welcome, [Open-Xml-PowerTools](https://github.com/OpenXmlDev/Open-Xml-PowerTools) users. This version of the library is based on SkiaSharp, which replaced System.Drawing.Common, which stops supporting all operating systems except Windows starting with the version .NET 6 Thanks to [SkiaSharp](https://github.com/mono/SkiaSharp), Open-Xml-PowerTools has become cross-platform.</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
