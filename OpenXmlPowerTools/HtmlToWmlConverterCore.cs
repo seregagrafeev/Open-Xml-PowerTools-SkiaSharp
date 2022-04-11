@@ -2307,13 +2307,15 @@ namespace OpenXmlPowerTools.HtmlToWml
                 {
                     return null;
                 }
-                ba = bmp.Bytes;
+                // since Image Part Type.Png, we use SKEncodedImageFormat.Png
+                ba = bmp.Encode(SKEncodedImageFormat.Png, 100).ToArray();
             }
 
             MainDocumentPart mdp = wDoc.MainDocumentPart;
             string rId = "R" + Guid.NewGuid().ToString().Replace("-", "");
             ImagePartType ipt = ImagePartType.Png;
             ImagePart newPart = mdp.AddImagePart(ipt, rId);
+
             using (Stream s = newPart.GetStream(FileMode.Create, FileAccess.ReadWrite))
                 s.Write(ba, 0, ba.GetUpperBound(0) + 1);
 
